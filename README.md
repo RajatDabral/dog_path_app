@@ -1,6 +1,8 @@
 # dog_path_app
 
-A new Flutter project.
+A Dog's Path App developed in Flutter.
+It has Facebook Sign In method using Graph API.
+
 
 ## Getting Started
 
