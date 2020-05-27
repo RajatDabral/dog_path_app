@@ -14,7 +14,7 @@ class DogPathProvider with ChangeNotifier {
   }
 
   Future<void> getPath() async {
-    const url = "[api_path_here]";
+    const url = "https://5d55541936ad770014ccdf2d.mockapi.io/api/v1/paths";
     try {
       final response = await http.get(url);
       final data = json.decode(response.body);

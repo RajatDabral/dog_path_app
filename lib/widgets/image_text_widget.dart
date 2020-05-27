@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:dog_path_app/providers/dog_path_provider.dart';
+import '../services/animate_widgets.dart';
 
 class ImageTextWidget extends StatefulWidget {
   /// getting index from HomeScreenWidget from the parent Listview Builder
@@ -14,13 +14,46 @@ class ImageTextWidget extends StatefulWidget {
 }
 
 class _ImageTextWidgetState extends State<ImageTextWidget> {
-  ScrollController _scrollImageController;
-  ScrollController _scrollTextController;
   int _indexFromImage = 0;
   int _itemCount = 0;
-  int _imageIndex = 0;
   int _selectedIndex = 0;
   int previousImageSelectedIndex = 0;
+  ScrollController _scrollImageController;
+  ScrollController _scrollTextController;
+
+  bool isFromText;
+
+  void _animateList(int ind, double width) {
+    if (isFromText) {
+      if (ind > _selectedIndex) {
+        AnimateImage(scrollImageController: _scrollImageController)
+            .animateForward(ind, width, _selectedIndex);
+        AnimateText(scrollTextController: _scrollTextController)
+            .animateForward(ind, width, _selectedIndex);
+        // animateForward(ind, width, _selectedIndex);
+        _selectedIndex = ind;
+
+        // print("ANIMATED FORWARD");
+      } else if (ind < _selectedIndex) {
+        AnimateImage(scrollImageController: _scrollImageController)
+            .animateBackward(ind, width, _selectedIndex);
+        AnimateText(scrollTextController: _scrollTextController)
+            .animateBackward(ind, width, _selectedIndex);
+        // _animateBackward(ind, width, _selectedIndex);
+        _selectedIndex = ind;
+      }
+    } else {
+      if (previousImageSelectedIndex < _selectedIndex) {
+        print(
+            "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, FORWARD ANIMATION");
+        AnimateText(scrollTextController: _scrollTextController)
+            .animateForward(previousImageSelectedIndex, width, _selectedIndex);
+      } else if (previousImageSelectedIndex > _selectedIndex) {
+        print(
+            "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, BACKWARD ANIMATION");
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -49,9 +82,6 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
   void _scrollListenerWithItemCount(int items, int ind) {
     final width = MediaQuery.of(context).size.width;
 
-    //
-
-    //
     int itemCount = items;
     double scrollOffset = _scrollImageController.position.pixels;
     double viewportHeight = _scrollImageController.position.viewportDimension;
@@ -59,67 +89,13 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
         _scrollImageController.position.minScrollExtent;
 
     previousImageSelectedIndex = _selectedIndex;
-
     _selectedIndex =
         (scrollOffset / (scrollRange + viewportHeight) * itemCount).floor();
 
-    if (previousImageSelectedIndex < _selectedIndex) {
-      setState(() {
-        print(
-            "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, FORWARD ANIMATION");
-        // _animateForward(previousImageSelectedIndex, width, _selectedIndex);
-      });
-    } else if (previousImageSelectedIndex > _selectedIndex) {
-      setState(() {
-        print(
-            "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, BACKWARD ANIMATION");
-            // _animateBackward(previousImageSelectedIndex, width, _selectedIndex);
-      });
-    }
-  }
-
-  void _animateForward(int currentIndex, double width, int selectedIndex) {
-    _scrollImageController.animateTo(
-      currentIndex == 0 ? width : width * currentIndex,
-      duration: Duration(milliseconds: 1500),
-      curve: Curves.fastOutSlowIn,
-    );
-
-    num currentOffset = _scrollTextController.offset;
-    num indexDiff = currentIndex - selectedIndex;
-    if (indexDiff < 2) {
-      print(currentIndex - selectedIndex);
-      currentOffset += width / 2 * (currentIndex - selectedIndex);
-      // print("orginal offset: ${_scrollTextController.offset}");
-      // print("current offsets: $currentOffset");
-    } else if (indexDiff > 2 && indexDiff < 4) {
-      print(currentIndex - selectedIndex);
-      currentOffset += (width / 4) * indexDiff;
-    } else {
-      print(currentIndex - selectedIndex);
-
-      currentOffset = currentOffset + width / 2;
-    }
-
-    _scrollTextController.animateTo(
-      currentOffset,
-      duration: Duration(milliseconds: 1000),
-      curve: Curves.linear,
-    );
-  }
-
-  void _animateBackward(int currentIndex, double width, int selectedIndex) {
-    _scrollImageController.animateTo(
-      currentIndex == 0 ? width * currentIndex : width,
-      duration: Duration(milliseconds: 1500),
-      curve: Curves.fastOutSlowIn,
-    );
-
-    _scrollTextController.animateTo(
-      currentIndex == 0 ? width * .30 : 0.0,
-      duration: Duration(milliseconds: 1000),
-      curve: Curves.fastOutSlowIn,
-    );
+    setState(() {
+      isFromText = false;
+      _animateList(ind, width);
+    });
   }
 
   @override
@@ -162,27 +138,8 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
               GestureDetector(
                 onTap: () {
                   setState(() {
-                    // _textIndex = ind;                         //CHEKING WHY
-                    // print("index is: $ind & SelectedIndex is: $_selectedIndex");
-
-                    if (ind > _selectedIndex) {
-                      _animateForward(ind, width, _selectedIndex);
-                      _selectedIndex = ind;
-
-                      print("ANIMATED FORWARD");
-
-                      //
-                      // _textIndex = _selectedIndex;
-                      // print(
-                      // "index is: $ind & SelectedIndex is: $_selectedIndex");
-                    } else if (ind < _selectedIndex) {
-                      _animateBackward(ind, width, _selectedIndex);
-                      _selectedIndex = ind;
-                      print("ANIMATED BACKWARD");
-
-                      // print(
-                      // "index is: $ind & SelectedIndex is: $_selectedIndex");
-                    }
+                    isFromText = true;
+                    _animateList(ind, width);
                   });
                 },
                 child: Text(
