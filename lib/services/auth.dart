@@ -31,13 +31,11 @@ class Auth implements AuthBase {
 
       case FacebookLoginStatus.cancelledByUser:
         updateLoggedState(false);
-
         break;
 
       case FacebookLoginStatus.error:
         updateLoggedState(false);
         break;
-
     }
   }
 

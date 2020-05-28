@@ -1,8 +1,9 @@
-import 'package:dog_path_app/providers/dog_path_provider.dart';
-import 'package:dog_path_app/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../screens/login_screen.dart';
+
+import '../providers/dog_path_provider.dart';
+import '../screens/landing_page.dart';
+import '../services/auth.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -14,7 +15,11 @@ class _SplashScreenState extends State<SplashScreen> {
     await getData();
     await Future.delayed(Duration(seconds: 5));
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (ctx) => HomeScreen()),
+      MaterialPageRoute(
+        builder: (ctx) => LandingPage(
+          auth: Auth(),
+        ),
+      ),
     );
   }
 
@@ -25,14 +30,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
   }
 
   @override
   void initState() {
     super.initState();
     nextScreen();
-
   }
 
   @override

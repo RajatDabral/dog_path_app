@@ -1,30 +1,31 @@
-import 'package:dog_path_app/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth.dart';
-import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
+  LoginScreen({@required this.onSignIn, @required this.auth});
+
+  final Function(bool) onSignIn;
+  final AuthBase auth;
+
   Future<void> _loginWithFB(BuildContext context) async {
-    final authProvider = Provider.of<AuthBase>(context, listen: false);
-    await authProvider.loginWithFb();
+    try {
+      await auth.loginWithFb();
+      onSignIn(auth.isLoggedIn);
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthBase>(context);
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Container(
-          alignment: Alignment.center,
-          child: authProvider.isLoggedIn
-              ? HomeScreen()
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _buildContent(context),
-                ),
+      body: Container(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _buildContent(context),
         ),
       ),
     );
