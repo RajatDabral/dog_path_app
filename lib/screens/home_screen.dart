@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
-import 'package:provider/provider.dart';
-
 import 'package:dog_path_app/services/auth.dart';
 import 'package:dog_path_app/widgets/home_screen_widget.dart';
 
 class HomeScreen extends StatelessWidget {
+  HomeScreen({@required this.onSignOut, @required this.auth});
+
+  final VoidCallback onSignOut;
+  final AuthBase auth;
+
   Future<void> _logOut(BuildContext context) async {
-    final authProvider = Provider.of<AuthBase>(context, listen: false);
-    authProvider.updateLoggedState(false);
-    await authProvider.logOut();
+    auth.updateLoggedState(false);
+    await auth.logOut();
+    onSignOut();
   }
 
   @override
@@ -37,18 +40,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-// child: GridView.builder(
-//     scrollDirection: Axis.horizontal,
-//     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//       crossAxisCount: 1,
-//     ),
-//     itemCount: dogP[index].subpaths.length,
-//     itemBuilder: (ctx, ind) {
-//       return GridTile(
-//         child: Image.network(
-//           dogP[index].subpaths[ind].imageUrl,
-//           fit: BoxFit.fill,
-//         ),
-//       );
-//     }),
