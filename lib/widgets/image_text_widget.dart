@@ -27,72 +27,46 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
   bool isFromText = false;
   bool isFromImage = false;
 
+  ///FUNCTION TO ANIMATE LIST VIEW .i.e [Image] and [Text]
   Future<void> _animateList(
       int ind, double width, bool fromText, bool fromImage) async {
     ///if [Text] i.e Path is tapped
     ///
+    final animateText =
+        AnimateText(scrollTextController: _scrollTextController);
+    final animateImage =
+        AnimateImage(scrollImageController: _scrollImageController);
 
     if (fromText && !fromImage) {
       if (ind > _selectedIndex) {
-        print(
-            "RAN FROM TEXT FORWARD selected index: $_selectedIndex and ind : $ind");
-        await AnimateText(scrollTextController: _scrollTextController)
-            .animateForward(ind, width, _selectedIndex);
-        await AnimateImage(scrollImageController: _scrollImageController)
-            .animateForward(ind, width, _selectedIndex);
+        await animateText.animateForward(ind, width, _selectedIndex);
+        await animateImage.animateForward(ind, width, _selectedIndex);
         _selectedIndex = ind;
-        print(
-            "RAN FROM TEXT FORWARD UPDATEDD selected index: $_selectedIndex and ind : $ind");
       } else if (ind < _selectedIndex) {
-        print(
-            "RAN FROM TEXT BACKWARD  selected index: $_selectedIndex and ind : $ind");
-
-        await AnimateText(scrollTextController: _scrollTextController)
-            .animateBackward(ind, width, _selectedIndex);
-        await AnimateImage(scrollImageController: _scrollImageController)
-            .animateBackward(ind, width, _selectedIndex);
+        await animateText.animateBackward(ind, width, _selectedIndex);
+        await animateImage.animateBackward(ind, width, _selectedIndex);
         _selectedIndex = ind;
-        print(
-            "RAN FROM TEXT BACKWARD UPDATEDD  selected index: $_selectedIndex and ind : $ind");
       }
-      //
 
-      print("isFromText from the TEXT BLOC: $isFromText ");
       isFromImage = false;
       isFromText = false;
-      // _selectedIndex = ind;
-      print("selected value : $_selectedIndex");
-      print("isFromText from the TEXT BLOC   UPDATED: $isFromText ");
     }
 
     ///When [Image] is scrolled
     ///
+    ///
     else if (fromImage && !fromText) {
-      // print(
-      //     "ind is :$ind , isFromText is :$isFromText, selectedIndex: $_selectedIndex, previous: $previousImageSelectedIndex");
       if (previousImageSelectedIndex < _selectedIndex) {
-        print("RAN from IMAGE FORWARD");
-
-        // print(
-        //     "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, FORWARD ANIMATION");
-        await AnimateImage(scrollImageController: _scrollImageController)
-            .animateForward(previousImageSelectedIndex, width, _selectedIndex);
-        await AnimateText(scrollTextController: _scrollTextController)
-            .animateForward(_selectedIndex, width, previousImageSelectedIndex);
-
-        //
-
+        await animateImage.animateForward(
+            previousImageSelectedIndex, width, _selectedIndex);
+        await animateText.animateForward(
+            _selectedIndex, width, previousImageSelectedIndex);
       } else if (previousImageSelectedIndex > _selectedIndex) {
         print("RAN from IMAGE BACKWARD");
-        await AnimateImage(scrollImageController: _scrollImageController)
-            .animateBackward(previousImageSelectedIndex, width, _selectedIndex);
-        await AnimateText(scrollTextController: _scrollTextController)
-            .animateBackward(_selectedIndex, width, previousImageSelectedIndex);
-
-        // _selectedIndex = previousImageSelectedIndex;
-
-        //   print(
-        //       "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, BACKWARD ANIMATION");
+        await animateImage.animateBackward(
+            previousImageSelectedIndex, width, _selectedIndex);
+        await animateText.animateBackward(
+            _selectedIndex, width, previousImageSelectedIndex);
       }
       isFromText = false;
       isFromImage = false;
@@ -117,6 +91,7 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
     super.dispose();
     _scrollImageController.removeListener(
         () => _scrollListenerWithItemCount(_itemCount, _indexFromImage));
+
     _scrollImageController.dispose();
 
     _scrollTextController.removeListener(
@@ -124,13 +99,20 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
     _scrollTextController.dispose();
   }
 
+  ///Live listener to the Image List view
+  ///for getting current [index] of the [image]
+  ///
+
   void _scrollListenerWithItemCount(int items, int ind) {
     bool isChanged;
     int currentImageIndex;
     final width = MediaQuery.of(context).size.width;
-    // print("isFromText : $isFromText");
+
+    /// Checking if the [image] animated form the Image List
+    /// isFromText will [false] that means user swiped the [image]
+    ///
+
     if (!isFromText) {
-      // print("INSIDE LISTENER");
       isFromImage = true;
       int itemCount = items;
       double scrollOffset = _scrollImageController.position.pixels;
@@ -143,17 +125,12 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
       previousImageSelectedIndex = _selectedIndex;
       _selectedIndex = currentImageIndex;
 
-      ///NOTE ERROR IS HERE WITH LOGIC :
-      // print(
-      //     "previous: $previousImageSelectedIndex   AND selected: $_selectedIndex");
       isChanged = _selectedIndex != previousImageSelectedIndex ? true : false;
-      // print("isChanged : $isChanged");
+
+      ///if the [image] was actually moved
 
       if (isChanged) {
         isChanged = !isChanged;
-        // isFromText = !isFromText;
-
-        print("I HAVE CHANGED FROM HERE");
         setState(() {
           _currentIndex = _selectedIndex;
           _animateList(ind, width, isFromText, isFromImage);
@@ -239,13 +216,14 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
   ///uses a ScrollController, which controlls how the list will animate & the cur
 
   Widget _buildImage(double height, double width) {
-    //TESTNG_________
-    //
+    ///Testing Purpose, since the [API] throws error for this.
+    ///Temporary measure.
+
     const fakeUrl =
         "https://www.sftravel.com/sites/sftraveldev.prod.acquia-sites.com/files/SanFrancisco_0.jpg";
     const url =
         "https://cdn.pixabay.com/photo/2014/07/10/10/20/golden-gate-bridge-388917_960_720.jpg";
-    //
+
     final dogP = Provider.of<DogPathProvider>(context, listen: false).dogPath;
     final subP = dogP[widget.index].subpaths;
     _itemCount = subP.length;
