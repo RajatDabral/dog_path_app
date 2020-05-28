@@ -17,7 +17,7 @@ class AnimateImage implements AnimateWidgets {
       int currentIndex, double width, int selectedIndex) async{
    await  scrollImageController.animateTo(
       currentIndex == 0 ? width * currentIndex : width,
-      duration: Duration(milliseconds: 1500),
+      duration: Duration(milliseconds: 1000),
       curve: Curves.fastOutSlowIn,
     );
   }
@@ -27,7 +27,7 @@ class AnimateImage implements AnimateWidgets {
       int currentIndex, double width, int selectedIndex) async{
    await scrollImageController.animateTo(
       currentIndex == 0 ? width : width * currentIndex,
-      duration: Duration(milliseconds: 1500),
+      duration: Duration(milliseconds: 1000),
       curve: Curves.fastOutSlowIn,
     );
   }
