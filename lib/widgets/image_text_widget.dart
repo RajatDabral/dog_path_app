@@ -21,38 +21,83 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
   ScrollController _scrollImageController;
   ScrollController _scrollTextController;
 
-  bool isFromText;
+  int _currentIndex =
+      0; //IT WONT WAIT FOR FUTURE FUNCTION AND WILL ALSO HOLD SELECTED VALUE
 
-  void _animateList(int ind, double width) {
-    if (isFromText) {
+  bool isFromText = false;
+  bool isFromImage = false;
+
+  Future<void> _animateList(
+      int ind, double width, bool fromText, bool fromImage) async {
+    ///if [Text] i.e Path is tapped
+    ///
+
+    if (fromText && !fromImage) {
       if (ind > _selectedIndex) {
-        AnimateImage(scrollImageController: _scrollImageController)
+        print(
+            "RAN FROM TEXT FORWARD selected index: $_selectedIndex and ind : $ind");
+        await AnimateText(scrollTextController: _scrollTextController)
             .animateForward(ind, width, _selectedIndex);
-        AnimateText(scrollTextController: _scrollTextController)
+        await AnimateImage(scrollImageController: _scrollImageController)
             .animateForward(ind, width, _selectedIndex);
-        // animateForward(ind, width, _selectedIndex);
         _selectedIndex = ind;
-
-        // print("ANIMATED FORWARD");
+        print(
+            "RAN FROM TEXT FORWARD UPDATEDD selected index: $_selectedIndex and ind : $ind");
       } else if (ind < _selectedIndex) {
-        AnimateImage(scrollImageController: _scrollImageController)
+        print(
+            "RAN FROM TEXT BACKWARD  selected index: $_selectedIndex and ind : $ind");
+
+        await AnimateText(scrollTextController: _scrollTextController)
             .animateBackward(ind, width, _selectedIndex);
-        AnimateText(scrollTextController: _scrollTextController)
+        await AnimateImage(scrollImageController: _scrollImageController)
             .animateBackward(ind, width, _selectedIndex);
-        // _animateBackward(ind, width, _selectedIndex);
         _selectedIndex = ind;
-      }
-    } else {
-      if (previousImageSelectedIndex < _selectedIndex) {
         print(
-            "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, FORWARD ANIMATION");
-        AnimateText(scrollTextController: _scrollTextController)
-            .animateForward(previousImageSelectedIndex, width, _selectedIndex);
-      } else if (previousImageSelectedIndex > _selectedIndex) {
-        print(
-            "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, BACKWARD ANIMATION");
+            "RAN FROM TEXT BACKWARD UPDATEDD  selected index: $_selectedIndex and ind : $ind");
       }
+      //
+
+      print("isFromText from the TEXT BLOC: $isFromText ");
+      isFromImage = false;
+      isFromText = false;
+      // _selectedIndex = ind;
+      print("selected value : $_selectedIndex");
+      print("isFromText from the TEXT BLOC   UPDATED: $isFromText ");
     }
+
+    ///When [Image] is scrolled
+    ///
+    else if (fromImage && !fromText) {
+      // print(
+      //     "ind is :$ind , isFromText is :$isFromText, selectedIndex: $_selectedIndex, previous: $previousImageSelectedIndex");
+      if (previousImageSelectedIndex < _selectedIndex) {
+        print("RAN from IMAGE FORWARD");
+
+        // print(
+        //     "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, FORWARD ANIMATION");
+        await AnimateImage(scrollImageController: _scrollImageController)
+            .animateForward(previousImageSelectedIndex, width, _selectedIndex);
+        await AnimateText(scrollTextController: _scrollTextController)
+            .animateForward(_selectedIndex, width, previousImageSelectedIndex);
+
+        //
+
+      } else if (previousImageSelectedIndex > _selectedIndex) {
+        print("RAN from IMAGE BACKWARD");
+        await AnimateImage(scrollImageController: _scrollImageController)
+            .animateBackward(previousImageSelectedIndex, width, _selectedIndex);
+        await AnimateText(scrollTextController: _scrollTextController)
+            .animateBackward(_selectedIndex, width, previousImageSelectedIndex);
+
+        // _selectedIndex = previousImageSelectedIndex;
+
+        //   print(
+        //       "selected index : $_selectedIndex , previous: $previousImageSelectedIndex, BACKWARD ANIMATION");
+      }
+      isFromText = false;
+      isFromImage = false;
+    } else
+      return;
   }
 
   @override
@@ -80,22 +125,42 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
   }
 
   void _scrollListenerWithItemCount(int items, int ind) {
+    bool isChanged;
+    int currentImageIndex;
     final width = MediaQuery.of(context).size.width;
+    // print("isFromText : $isFromText");
+    if (!isFromText) {
+      // print("INSIDE LISTENER");
+      isFromImage = true;
+      int itemCount = items;
+      double scrollOffset = _scrollImageController.position.pixels;
+      double viewportHeight = _scrollImageController.position.viewportDimension;
+      double scrollRange = _scrollImageController.position.maxScrollExtent -
+          _scrollImageController.position.minScrollExtent;
 
-    int itemCount = items;
-    double scrollOffset = _scrollImageController.position.pixels;
-    double viewportHeight = _scrollImageController.position.viewportDimension;
-    double scrollRange = _scrollImageController.position.maxScrollExtent -
-        _scrollImageController.position.minScrollExtent;
+      currentImageIndex =
+          (scrollOffset / (scrollRange + viewportHeight) * itemCount).floor();
+      previousImageSelectedIndex = _selectedIndex;
+      _selectedIndex = currentImageIndex;
 
-    previousImageSelectedIndex = _selectedIndex;
-    _selectedIndex =
-        (scrollOffset / (scrollRange + viewportHeight) * itemCount).floor();
+      ///NOTE ERROR IS HERE WITH LOGIC :
+      // print(
+      //     "previous: $previousImageSelectedIndex   AND selected: $_selectedIndex");
+      isChanged = _selectedIndex != previousImageSelectedIndex ? true : false;
+      // print("isChanged : $isChanged");
 
-    setState(() {
-      isFromText = false;
-      _animateList(ind, width);
-    });
+      if (isChanged) {
+        isChanged = !isChanged;
+        // isFromText = !isFromText;
+
+        print("I HAVE CHANGED FROM HERE");
+        setState(() {
+          _currentIndex = _selectedIndex;
+          _animateList(ind, width, isFromText, isFromImage);
+        });
+      } else
+        return;
+    }
   }
 
   @override
@@ -139,15 +204,17 @@ class _ImageTextWidgetState extends State<ImageTextWidget> {
                 onTap: () {
                   setState(() {
                     isFromText = true;
-                    _animateList(ind, width);
+                    isFromImage = false;
+                    print("selected Index from On TAP: $_selectedIndex");
+                    _currentIndex = ind;
+                    _animateList(ind, width, isFromText, isFromImage);
                   });
                 },
                 child: Text(
                   subP[ind].subTitle,
                   style: TextStyle(
-                    color: _selectedIndex == ind
-                        ? Colors.white
-                        : Color(0xff778fab),
+                    color:
+                        _currentIndex == ind ? Colors.white : Color(0xff778fab),
                     fontSize: 20,
                   ),
                 ),
